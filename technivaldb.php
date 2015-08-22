@@ -4,9 +4,10 @@ Class TechnivalDB {
 	private $tablename;
 	private $tablespec =
 		"id INTEGER PRIMARY KEY, name text NOT NULL, occasion integer NOT NULL";
-	private $con;       /** Database connection */
-	private $st_insert; /** Compiled insertion SQL statement */
-	private $sql_read;  /** Non-compiled fetching SQL statement */
+	private $con;           /** Database connection */
+	private $st_insert;     /** Compiled insertion SQL statement */
+	private $sql_fetch_all; /** Non-compiled all-fetching SQL statement */
+	private $st_fetch;      /** Compiled occasion-selective fetching SQL statement */
 	
 	/**
 	 * Constructor. Opens database connection and constructs SQL statement templates.
@@ -53,9 +54,11 @@ Class TechnivalDB {
 	 * and precompile them if possible.
 	 */
 	private function compile_statements() {
-		$this->sql_read = "SELECT name, occasion FROM $this->tablename";
+		$this->sql_fetch_all = "SELECT name, occasion FROM $this->tablename";
 		$this->st_insert = $this->con->prepare("INSERT INTO $this->tablename VALUES(NULL, ?, ?)");
 		if(!$this->st_insert) $this->report_error("Cannot compile insert statement");
+		$this->st_fetch = $this->con->prepare("SELECT name, occasion FROM $this->tablename WHERE occasion=?");
+		if(!$this->st_fetch) $this->report_error("Cannot compile selective fetch statement");
 	}
 	
 	/**
@@ -81,10 +84,19 @@ Class TechnivalDB {
 	
 	/**
 	 * Fetch all participants. Returns an array with both numeric and
-	 * associative keys.
+	 * associative keys. If an $occasion (optional, default=null) is
+	 * provided, only participants in that occasion are returned.
+	 * Otherwise all participants in all occasions are returned.
 	 */
-	public function get_stuff() {
-		return $this->con->query($this->sql_read) -> fetchAll();
+	public function get_stuff($occasion=null) {
+		if(is_null($occasion))
+			$res = $this->con->query($this->sql_fetch_all);
+		else {
+			if(!$this->st_fetch->execute(array($occasion)))
+				$this->report_error("Selective query for occasion $occasion failed");
+			$res = $this->st_fetch;
+		}
+		return $res -> fetchAll();
 	}
 	
 	/**
