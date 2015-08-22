@@ -21,12 +21,20 @@ Class TechnivalDB {
 	public function __construct($db, $table, $recreate=false) {
 		// Open database connection
 		$this->dbname = $db;
-		$this->con = new PDO("sqlite:".$this->dbname);
-		if(!$this->con) throw new Exception("Could not open database: ".$error);
+		$this->open_con();
 		// Other initialisation stuff
 		$this->tablename = $this->con->quote($table);
 		$this->create_table($recreate);
 		$this->compile_statements();
+	}
+	
+	/**
+	 * (re-)Open database connection. If a connection is already open, it will be
+	 * closed and a new one will be opened.
+	 */
+	public function open_con() {
+		$this->con = new PDO("sqlite:".$this->dbname);
+		if(!$this->con) throw new Exception("Could not open database: ".$error);
 	}
 	
 	/**
@@ -80,8 +88,7 @@ Class TechnivalDB {
 	}
 	
 	/**
-	 * Close database connection. This is irreversible and the
-	 * TechnivalDB object is useless after this.
+	 * Close database connection.
 	 */
 	public function close(){
 		$this->con = null;
