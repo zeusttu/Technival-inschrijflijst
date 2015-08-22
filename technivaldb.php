@@ -56,7 +56,7 @@ Class TechnivalDB {
 	 * closed and a new one will be opened.
 	 */
 	public function open_con() {
-		$this->con = new PDO("sqlite:".$this->dbname);
+		$this->con = new PDO("sqlite:$this->dbname.sqlite");
 		if(!$this->con) throw new Exception("Could not open database: ".$error);
 	}
 	

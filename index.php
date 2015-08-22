@@ -17,7 +17,7 @@ This page can be used to enter participants.
 <?php
 	if($_SERVER["REQUEST_METHOD"] == "POST") {
 		try {
-			$db = new TechnivalDB("technival.db", "something", false);
+			$db = new TechnivalDB("technival", "something", false);
 			$occ = null;
 			if(isset($_POST["occasion"])) $occ = $_POST["occasion"];
 			$db->new_participant($_POST["name"], $occ);

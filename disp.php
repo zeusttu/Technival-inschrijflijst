@@ -21,7 +21,7 @@ This page will display all participants.
 	</tr>
 	<?php
 		try{
-			$db = new TechnivalDB("technival.db", "something");
+			$db = new TechnivalDB("technival", "something");
 			$stuff = $db->get_participants();
 			$db->close_con();
 			for($i=0; $i<count($stuff); $i++) echo "<tr><td>".$stuff[$i][1]."</td><td>".$stuff[$i][0]."</td></tr>";
