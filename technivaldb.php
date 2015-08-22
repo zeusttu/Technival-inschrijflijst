@@ -3,7 +3,7 @@ Class TechnivalDB {
 	private $dbname;
 	private $tablename;
 	private $tablespec =
-		"id INTEGER PRIMARY KEY, name text NOT NULL";
+		"id INTEGER PRIMARY KEY, name text NOT NULL, occasion integer NOT NULL";
 	private $con;
 	private $st_insert;
 	private $sql_read;
@@ -25,8 +25,8 @@ Class TechnivalDB {
 	}
 	
 	private function compile_statements() {
-		$this->sql_read = "SELECT name FROM $this->tablename";
-		$this->st_insert = $this->con->prepare("INSERT INTO $this->tablename VALUES(NULL, ?)");
+		$this->sql_read = "SELECT name, occasion FROM $this->tablename";
+		$this->st_insert = $this->con->prepare("INSERT INTO $this->tablename VALUES(NULL, ?, ?)");
 		if(!$this->st_insert) $this->report_error("Cannot compile insert statement");
 	}
 	
@@ -38,8 +38,9 @@ Class TechnivalDB {
 		throw new Exception("<p>$msg</p>");
 	}
 	
-	public function insert($name) {
-		if($this->st_insert->execute(array($name)) === false) $this->report_error("Cannot insert $name");
+	public function insert($name, $occasion=1) {
+		if($this->st_insert->execute(array($name, $occasion)) === false)
+			$this->report_error("Cannot insert $name at occasion $occasion");
 	}
 	
 	public function get_stuff() {
