@@ -1,17 +1,25 @@
 <?php
 /**
  * technivaldb.php
- * Author: Zeust the Unoobian <2noob2banoob@gmail.com>
+ * Copyright: Zeust the Unoobian <2noob2banoob@gmail.com>, 2015
  *
  * This is the backend of the registration list. It probides a
  * database abstraction class.
  *
- * This file is open-source and part of the open-source
- * Technival-inschrijflijst project. I have yet to decide upom
- * a license, but you are at the very least free to use this code
- * in your own code provided that your own code is also open-source
- * and compatible with the license I will choose in the future
- * (the most restrictive one I am considering is the GPL).
+ * This file is part of Technival-inschrijflijst.
+ *
+ * Technival-inschrijflijst is free software: you can redistribute it
+ * and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * DigitalLockin is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with DigitalLockin. If not, see <http://www.gnu.org/licenses/>.
  */
 /**
  * The TechnivalDB class provides an abstraction layer around the
