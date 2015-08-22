@@ -1,4 +1,26 @@
 <?php
+/**
+ * technivaldb.php
+ * Author: Zeust the Unoobian <2noob2banoob@gmail.com>
+ *
+ * This is the backend of the registration list. It probides a
+ * database abstraction class.
+ *
+ * This file is open-source and part of the open-source
+ * Technival-inschrijflijst project. I have yet to decide upom
+ * a license, but you are at the very least free to use this code
+ * in your own code provided that your own code is also open-source
+ * and compatible with the license I will choose in the future
+ * (the most restrictive one I am considering is the GPL).
+ */
+/**
+ * The TechnivalDB class provides an abstraction layer around the
+ * database. The database structure is enforced by this class, the
+ * database and table are automatically created if not yet existent
+ * (with the option to delete and recreate the table), user input
+ * is secured before being entered into queries and SQL query
+ * details are hidden from the API-using code.
+ */
 Class TechnivalDB {
 	private $dbname;
 	private $tablename;
