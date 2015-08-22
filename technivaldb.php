@@ -26,7 +26,7 @@ Class TechnivalDB {
 		// Other initialisation stuff
 		$this->tablename = $this->con->quote($table);
 		$this->create_table($recreate);
-		$this->compile_statements();
+		$this->construct_statements();
 	}
 	
 	/**
@@ -46,26 +46,26 @@ Class TechnivalDB {
 	private function create_table($ifexists=false) {
 		if($ifexists) $this->con->exec("DROP TABLE IF EXISTS $this->tablename");
 		$sql = "CREATE TABLE IF NOT EXISTS $this->tablename($this->tablespec)";
-		if($this->con->exec($sql) === false) $this->report_error("Could not create table");
+		if($this->con->exec($sql) === false) $this->raise_error("Could not create table");
 	}
 	
 	/**
 	 * Finish SQL statement templates by inserting the table name in them,
 	 * and precompile them if possible.
 	 */
-	private function compile_statements() {
+	private function construct_statements() {
 		$this->sql_fetch_all = "SELECT name, occasion FROM $this->tablename";
 		$this->st_insert = $this->con->prepare("INSERT INTO $this->tablename VALUES(NULL, ?, ?)");
-		if(!$this->st_insert) $this->report_error("Cannot compile insert statement");
+		if(!$this->st_insert) $this->raise_error("Cannot compile insert statement");
 		$this->st_fetch = $this->con->prepare("SELECT name, occasion FROM $this->tablename WHERE occasion=?");
-		if(!$this->st_fetch) $this->report_error("Cannot compile selective fetch statement");
+		if(!$this->st_fetch) $this->raise_error("Cannot compile selective fetch statement");
 	}
 	
 	/**
 	 * Raise an Exception with the message given in $msg. If a database
 	 * connection is open, append the latest database error before raising.
 	 */
-	private function report_error($msg) {
+	private function raise_error($msg) {
 		if($this->con) {
 			$e = $this->con->errorInfo();
 			$msg .= "<br/>\nSQL error ($e[0], $e[1]): $e[2]";
@@ -77,9 +77,9 @@ Class TechnivalDB {
 	 * Insert a new entry into the database for person $name participating
 	 * during occasion $occasion (optional, default=1).
 	 */
-	public function insert($name, $occasion=1) {
+	public function new_participant($name, $occasion=1) {
 		if($this->st_insert->execute(array($name, $occasion)) === false)
-			$this->report_error("Cannot insert $name at occasion $occasion");
+			$this->raise_error("Cannot insert $name at occasion $occasion");
 	}
 	
 	/**
@@ -88,12 +88,12 @@ Class TechnivalDB {
 	 * provided, only participants in that occasion are returned.
 	 * Otherwise all participants in all occasions are returned.
 	 */
-	public function get_stuff($occasion=null) {
+	public function get_participants($occasion=null) {
 		if(is_null($occasion))
 			$res = $this->con->query($this->sql_fetch_all);
 		else {
 			if(!$this->st_fetch->execute(array($occasion)))
-				$this->report_error("Selective query for occasion $occasion failed");
+				$this->raise_error("Selective query for occasion $occasion failed");
 			$res = $this->st_fetch;
 		}
 		return $res -> fetchAll();
@@ -102,7 +102,7 @@ Class TechnivalDB {
 	/**
 	 * Close database connection.
 	 */
-	public function close(){
+	public function close_con(){
 		$this->con = null;
 	}
 }
