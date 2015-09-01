@@ -39,7 +39,7 @@ along with DigitalLockin. If not, see <http://www.gnu.org/licenses/>.
 			$db = new TechnivalDB("technival", "something");
 			$stuff = $db->get_participants();
 			$db->close_con();
-			for($i=0; $i<count($stuff); $i++) echo "<tr><td>".$stuff[$i][1]."</td><td>".$stuff[$i][0]."</td></tr>";
+			for($i=0; $i<count($stuff); $i++) echo "<tr><td>".$stuff[$i]["occasionstr"]." (".$stuff[$i]["occasion"].")</td><td>".$stuff[$i]["name"]."</td></tr>";
 		} catch(Exception $e) {
 			echo "<tr><td colspan=\"2\" style=\"color: red; font-weight: bold;\">Error</td></tr>";
 			echo "<tr><td colspan=\"2\" style=\"color: red; font-weight: bold;\">$e</td></tr>";

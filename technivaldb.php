@@ -118,7 +118,7 @@ Class TechnivalDB {
 	 * associative keys. If an $occasion (optional, default=null) is
 	 * provided, only participants in that occasion are returned.
 	 * Otherwise all participants in all occasions are returned.
-	 * The participant format is (name:str, occasion:int).
+	 * The participant format is (name:str, occasion:int, occasionstr:str).
 	 */
 	public function get_participants($occasion=null) {
 		if(is_null($occasion))
@@ -128,7 +128,10 @@ Class TechnivalDB {
 				$this->raise_error("Selective query for occasion $occasion failed");
 			$res = $this->st_fetch;
 		}
-		return $res -> fetchAll();
+		$participants = $res -> fetchAll();
+		for($i=0; $i<count($participants); $i++)
+			$participants[$i][2] = $participants[$i]["occasionstr"] = "test";
+		return $participants;
 	}
 	
 	/**
