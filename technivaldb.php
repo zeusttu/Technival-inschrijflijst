@@ -96,7 +96,7 @@ Class TechnivalDB {
 	 * Finish SQL statement templates by inserting the table name in them,
 	 * and precompile them if possible.
 	 */
-	private function construct_statements() {
+	public function construct_statements() {
 		$this->sql_fetch_all = "SELECT name, occasion FROM $this->tablename";
 		$this->st_insert = $this->con->prepare("INSERT INTO $this->tablename VALUES(NULL, ?, ?)");
 		if(!$this->st_insert) $this->raise_error("Cannot compile insert statement");
@@ -191,8 +191,14 @@ Class TechnivalDB {
 	
 	/**
 	 * Close database connection.
+	 * Also undefines all compiled SQL statements.
 	 */
 	public function close_con(){
+		$this->st_insert = null;
+		$this->st_insert_occ = null;
+		$this->st_modify_occ = null;
+		$this->st_fetch = null;
+		$this->st_fetch_one_occ = null;
 		$this->con = null;
 	}
 }
