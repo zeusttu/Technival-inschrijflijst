@@ -113,10 +113,12 @@ Class TechnivalDB {
 	}
 	
 	/**
-	 * Fetch all participants. Returns an array with both numeric and
+	 * Fetch all participants. Returns an array of participants.
+	 * Each participant is an array with both numeric and
 	 * associative keys. If an $occasion (optional, default=null) is
 	 * provided, only participants in that occasion are returned.
 	 * Otherwise all participants in all occasions are returned.
+	 * The participant format is (name:str, occasion:int).
 	 */
 	public function get_participants($occasion=null) {
 		if(is_null($occasion))
