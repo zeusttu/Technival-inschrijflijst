@@ -32,22 +32,29 @@
 Class TechnivalDB {
 	private $dbname;
 	private $tablename;
+	private $tablename_occasions;
 	private $tablespec =
-		"id INTEGER PRIMARY KEY, name text NOT NULL, occasion integer NOT NULL";
+		"id integer PRIMARY KEY, name text NOT NULL, occasion integer NOT NULL";
+	private $tablespec_occasions =
+		"occasion integer PRIMARY KEY, description text";
 	private $con;           /** Database connection */
-	private $st_insert;     /** Compiled insertion SQL statement */
-	private $sql_fetch_all; /** Non-compiled all-fetching SQL statement */
-	private $st_fetch;      /** Compiled occasion-selective fetching SQL statement */
+	private $st_insert;     /** Compiled participant insertion SQL statement */
+	private $st_insert_occ; /** Compiled occasion insertion SQL statement */
+	private $st_modify_occ; /** Compiled occasion insertion SQL statement */
+	private $sql_fetch_all; /** Non-compiled all-participant-fetching SQL statement */
+	private $st_fetch;      /** Compiled occasion-selective participant-fetching SQL statement */
+	private $sql_fetch_occ; /** Non-compiled SQL statement to fetch occasions */
+	private $st_fetch_one_occ; /** Compiled SQL statement to check definedness of one occasion */
 	
 	/**
 	 * Constructor. Opens database connection and constructs SQL statement templates.
-	 * Also creates database and table if they do not exist.
+	 * Also creates database and tables if they do not exist.
 	 * Parameters:
 	 *   $db:       database name
 	 *   $table:    table name
-	 *   $recreate: (optional, default=false) if true, recreate table even if it already
-	 *              exists. This will delete all entries and update the table
-	 *              specification if it has changed in the code.
+	 *   $recreate: (optional, default=false) if true, recreate tables even if they
+	 *              already exist. This will delete all entries and update the table
+	 *              specifications if they have changed in the code.
 	 */
 	public function __construct($db, $table, $recreate=false) {
 		// Open database connection
@@ -55,7 +62,8 @@ Class TechnivalDB {
 		$this->open_con();
 		// Other initialisation stuff
 		$this->tablename = $this->con->quote($table);
-		$this->create_table($recreate);
+		$this->tablename_occasions = $this->con->quote($table."_occ");
+		$this->create_tables($recreate);
 		$this->construct_statements();
 	}
 	
@@ -69,14 +77,19 @@ Class TechnivalDB {
 	}
 	
 	/**
-	 * Create the table if it does not exist or if $ifexists (optional, default=false)
-	 * is true. If the table is created, it will be empty and according to the
+	 * Create the tables if they do not exist or if $ifexists (optional, default=false)
+	 * is true. If the tables are created, they will be empty and according to the
 	 * specification in the current version of the code.
 	 */
-	private function create_table($ifexists=false) {
-		if($ifexists) $this->con->exec("DROP TABLE IF EXISTS $this->tablename");
-		$sql = "CREATE TABLE IF NOT EXISTS $this->tablename($this->tablespec)";
-		if($this->con->exec($sql) === false) $this->raise_error("Could not create table");
+	private function create_tables($ifexists=false) {
+		if($ifexists)
+			$this->con->exec("DROP TABLE IF EXISTS $this->tablename, $this->tablename_occasions");
+		$sql_participants = "CREATE TABLE IF NOT EXISTS $this->tablename($this->tablespec)";
+		$sql_occasions = "CREATE TABLE IF NOT EXISTS $this->tablename_occasions($this->tablespec_occasions)";
+		if($this->con->exec($sql_participants) === false)
+			$this->raise_error("Could not create participant table");
+		if($this->con->exec($sql_occasions) === false)
+			$this->raise_error("Could not create occasion table");
 	}
 	
 	/**
@@ -89,6 +102,10 @@ Class TechnivalDB {
 		if(!$this->st_insert) $this->raise_error("Cannot compile insert statement");
 		$this->st_fetch = $this->con->prepare("SELECT name, occasion FROM $this->tablename WHERE occasion=?");
 		if(!$this->st_fetch) $this->raise_error("Cannot compile selective fetch statement");
+		$this->sql_fetch_occ = "SELECT occasion, description FROM $this->tablename_occasions";
+		$this->st_insert_occ = $this->con->prepare("INSERT INTO $this->tablename_occasions VALUES(?, ?)");
+		$this->st_modify_occ = $this->con->prepare("UPDATE $this->tablename_occasions SET description=? WHERE occasion=?");
+		$this-> st_fetch_one_occ = $this->con->prepare("SELECT occasion from $this->tablename_occasions WHERE occasion=?");
 	}
 	
 	/**
@@ -113,6 +130,39 @@ Class TechnivalDB {
 	}
 	
 	/**
+	 * Get an array of occasions in the format [id:int -> description:str]
+	 */
+	public function get_occasions() {
+		$res = $this->con->query($this->sql_fetch_occ) -> fetchAll();
+		$occasions = Array();
+		for($i=0; $i<count($res); $i++)
+			$occasions[$res[$i]["occasion"]] = $res[$i]["description"];
+		return $occasions;
+	}
+	
+	/**
+	 * Check if an occasion is already defined
+	 */
+	private function occasion_is_defined($occasion) {
+		if(!$this->st_fetch_one_occ->execute(Array($occasion)))
+			$this->raise_error("Cannot check if occasion is defined");
+		return $this->st_fetch_one_occ->fetch() !== false;
+	}
+	
+	/**
+	 * Define a new occasion or redefine an existing one.
+	 */
+	public function define_occasion($id, $description) {
+		if($this->occasion_is_defined($id)) {
+			if($this->st_modify_occ->execute(array($description, $id)) === false)
+				$this->raise_error("Cannot insert occasion $description ($id)");
+		} else {
+			if($this->st_insert_occ->execute(array($id, $description)) === false)
+				$this->raise_error("Cannot insert occasion $description ($id)");
+		}
+	}
+	
+	/**
 	 * Fetch all participants. Returns an array of participants.
 	 * Each participant is an array with both numeric and
 	 * associative keys. If an $occasion (optional, default=null) is
@@ -129,8 +179,13 @@ Class TechnivalDB {
 			$res = $this->st_fetch;
 		}
 		$participants = $res -> fetchAll();
-		for($i=0; $i<count($participants); $i++)
-			$participants[$i][2] = $participants[$i]["occasionstr"] = "test";
+		$occasions = $this->get_occasions();
+		for($i=0; $i<count($participants); $i++) {
+			$occ = $participants[$i]["occasion"];
+			if(isset($occasions[$occ])) $occdesc = $occasions[$occ];
+			else $occdesc = "";
+			$participants[$i][2] = $participants[$i]["occasionstr"] = $occdesc;
+		}
 		return $participants;
 	}
 	
