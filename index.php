@@ -27,20 +27,46 @@ along with DigitalLockin. If not, see <http://www.gnu.org/licenses/>.
 <head>
 	<title>Technival inschrijflijst</title>
 </head>
+<script type="text/javascript">
+	function update_select() {
+		var val = document.getElementById("occasion").value;
+		sel = document.getElementById("occasion_desc");
+		opt = sel.options;
+		for(i=0; i < opt.length-1 && opt[i].value < val; i++);
+		if(opt[i].value == val) sel.selectedIndex = i;
+		else sel.selectedIndex = 0; 
+	}
+	function update_num() {
+		document.getElementById("occasion").value = document.getElementById("occasion_desc").value;
+	}
+</script>
 <body>
 
 <?php
-	if($_SERVER["REQUEST_METHOD"] == "POST") {
+	try {
+		$db = new TechnivalDB("technival", "something", false);
+	} catch (Exception $e) {
+		echo "<div>Failure</div>";
+		$db = null;
+	}
+	if($_SERVER["REQUEST_METHOD"] == "POST" && $db !== null) {
 		try {
-			$db = new TechnivalDB("technival", "something", false);
 			$occ = null;
 			if(isset($_POST["occasion"])) $occ = $_POST["occasion"];
 			$db->new_participant($_POST["name"], $occ);
-			$db->close_con();
 			echo "<div>Success</div>";
 		} catch (Exception $e) {
 			echo "<div>Failure</div>";
 		}
+	}
+	$occasions = null;
+	if($db !== null) {
+		try {
+			$occasions = $db->get_occasions();
+		} catch (Exception $e) {
+			echo "<div>Failure</div>";
+		}
+		try { $db->close_con(); } catch (Exception $e) {}
 	}
 ?>
 
@@ -48,14 +74,26 @@ along with DigitalLockin. If not, see <http://www.gnu.org/licenses/>.
 	<table>
 		<tr>
 			<td>Name:</td>
-			<td><input type="text" name="name"/></td>
+			<td colspan="2"><input type="text" name="name"/></td>
 		</tr>
 		<tr>
 			<td>Occasion:</td>
-			<td><input type="number" name="occasion" value=1/></td>
+			<td>
+				<input type="number" name="occasion" id="occasion" onchange="javascript:update_select()" defaultvalue=1/>
+			</td>
+			<td>
+				<select name="occasion_desc" id="occasion_desc" onchange="javascript:update_num()" value="1">
+					<option></option>
+					<?php
+						if ($occasions !== null)
+							foreach($occasions as $id => $desc)
+								echo "<option value=\"$id\">$desc</option>";
+					?>
+				</select>
+			</td>
 		</tr>
 		<tr>
-			<td colspan="2"><input type="submit"/></td>
+			<td colspan="3"><input type="submit"/></td>
 		</tr>
 	</table>
 </form>
