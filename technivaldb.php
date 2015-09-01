@@ -113,10 +113,14 @@ Class TechnivalDB {
 	 * connection is open, append the latest database error before raising.
 	 */
 	private function raise_error($msg) {
+		// Prevent attacks on the user's browser through malevolent error messages'
+		$msg = htmlspecialchars($msg);
+		// Add information about the last encountered database error
 		if($this->con) {
 			$e = $this->con->errorInfo();
 			$msg .= "<br/>\nSQL error ($e[0], $e[1]): $e[2]";
 		}
+		// Raise the error
 		throw new Exception("<p>$msg</p>");
 	}
 	
@@ -125,6 +129,10 @@ Class TechnivalDB {
 	 * during occasion $occasion (optional, default=1).
 	 */
 	public function new_participant($name, $occasion=1) {
+		// Prevent attacks on the user's browser through malevolent input
+		if(!is_int($occasion)) $occasion = htmlspecialchars($occasion);
+		$name = htmlspecialchars($name);
+		// Insert the participant into the database
 		if($this->st_insert->execute(array($name, $occasion)) === false)
 			$this->raise_error("Cannot insert $name at occasion $occasion");
 	}
@@ -153,6 +161,10 @@ Class TechnivalDB {
 	 * Define a new occasion or redefine an existing one.
 	 */
 	public function define_occasion($id, $description) {
+		// Prevent attacks on the user's browser through malevolent input
+		if(!is_int($id)) $id = htmlspecialchars($id);
+		$description = htmlspecialchars($description);
+		// Insert or rename the occasion in the database
 		if($this->occasion_is_defined($id)) {
 			if($this->st_modify_occ->execute(array($description, $id)) === false)
 				$this->raise_error("Cannot insert occasion $description ($id)");
