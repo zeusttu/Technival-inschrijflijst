@@ -46,7 +46,7 @@ along with DigitalLockin. If not, see <http://www.gnu.org/licenses/>.
 	try {
 		$db = new TechnivalDB("technival", "something", false);
 	} catch (Exception $e) {
-		echo "<div>Failure</div>";
+		echo "<div>Failure: $e</div>";
 		$db = null;
 	}
 	if($_SERVER["REQUEST_METHOD"] == "POST" && $db !== null) {
@@ -56,7 +56,7 @@ along with DigitalLockin. If not, see <http://www.gnu.org/licenses/>.
 			$db->new_participant($_POST["name"], $occ);
 			echo "<div>Success</div>";
 		} catch (Exception $e) {
-			echo "<div>Failure</div>";
+			echo "<div>Failure: $e</div>";
 		}
 	}
 	$occasions = null;
@@ -64,7 +64,7 @@ along with DigitalLockin. If not, see <http://www.gnu.org/licenses/>.
 		try {
 			$occasions = $db->get_occasions();
 		} catch (Exception $e) {
-			echo "<div>Failure</div>";
+			echo "<div>Failure: $e</div>";
 		}
 		try { $db->close_con(); } catch (Exception $e) {}
 	}
